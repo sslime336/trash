@@ -1,4 +1,4 @@
-pub struct Entry<T> {
-  key: String,
-  value: T,
+pub(crate) struct Entry<T> {
+  pub(crate) key: String, // when delete, use this
+  pub(crate) value: T,
 }
