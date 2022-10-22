@@ -13,7 +13,7 @@ proc getCurReadmeContent(dirName: string): string =
   result =
     "# " & dirName & "\n\n"
 
-var exceptDirs* = @[".git", "misc"]
+var exceptDirs* = @[".git", "misc", ".vscode"]
 
 proc addExceptDir(dirName: string) {.used.} =
   exceptDirs.add(dirName)

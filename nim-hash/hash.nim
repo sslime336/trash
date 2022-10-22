@@ -11,6 +11,7 @@ var chapterLockFile =
   try:
     open("chapters.lock", fmReadWriteExisting)
   except IOError:
+    echo "generate chapters.lock"
     open("chapters.lock", fmReadWrite)
 
 proc hashDir(dir: string): string =
@@ -32,21 +33,41 @@ proc hashChapters(): string =
     let hashed = dirName & ": " & hashDir(path) & '\n'
     result.add(hashed)
 
+proc overwriteLockFile(content: string) =
+  open("chapters.lock", fmWrite).write(content)
+
+
 proc getModifiedChaptersNames*(): seq[string] =
-  let prevChaptersStatus = chapterLockFile.readAll().split("\n")
-  let curChaptersStatus = hashChapters().split("\n")
+  let
+    lockFileContent = chapterLockFile.readAll()
+    curChapters = hashChapters()
+    prevChaptersStatus = lockFileContent.split("\n")
+    curChaptersStatus = curChapters.split("\n")
+
+  defer: overwriteLockFile(curChapters)
+
+  let
+    prevChaptersStatusLen = prevChaptersStatus.len
+    curChaptersStatusLen = curChaptersStatus.len
+  if prevChaptersStatusLen != curChaptersStatusLen:
+    return
   for i in 0..<prevChaptersStatus.len:
     if prevChaptersStatus[i] == curChaptersStatus[i]:
       continue
     result.add(curChaptersStatus[i].split(":")[0])
 
+
 proc getModifiedChaptersIndexes*(): cint {.cdecl, exportc, dynlib.} =
-  let prevChaptersStatus = chapterLockFile.readAll().split("\n")
-  let curChaptersStatus = hashChapters().split("\n")
+  let
+    lockFileContent = chapterLockFile.readAll()
+    curChapters = hashChapters()
+    prevChaptersStatus = lockFileContent.split("\n")
+    curChaptersStatus = curChapters.split("\n")
   for i in 0..<prevChaptersStatus.len:
     if prevChaptersStatus[i] == curChaptersStatus[i]:
       continue
     result = result or (1.cint shl i.cint)
+  overwriteLockFile(curChapters)
 
 {.pop.}
 
@@ -55,15 +76,13 @@ when isMainModule:
   let curHashedChapters = hashChapters()
   if curHashedChapters != chapterLockFile.readAll():
     echo "it has beed changed"
-    chapterLockFile.close()
-    chapterLockFile = open("chapters.lock", fmWrite)
-    chapterLockFile.write(curHashedChapters)
+    open("chapters.lock", fmWrite).write(curHashedChapters)
   else:
-    echo "you haven't done anything!"
+    echo "nothing had been changed"
 """
-
-when defined(bitpos):
-  echo getModifiedChaptersIndexes()
-else:
-  for name in getModifiedChaptersNames():
-    echo name
+if isMainModule:
+  when defined(bitpos):
+    echo getModifiedChaptersIndexes()
+  else:
+    for name in getModifiedChaptersNames():
+      echo name
