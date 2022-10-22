@@ -63,11 +63,18 @@ proc getModifiedChaptersIndexes*(): cint {.cdecl, exportc, dynlib.} =
     curChapters = hashChapters()
     prevChaptersStatus = lockFileContent.split("\n")
     curChaptersStatus = curChapters.split("\n")
+
+  defer: overwriteLockFile(curChapters)
+
+  let
+    prevChaptersStatusLen = prevChaptersStatus.len
+    curChaptersStatusLen = curChaptersStatus.len
+  if prevChaptersStatusLen != curChaptersStatusLen:
+    return
   for i in 0..<prevChaptersStatus.len:
     if prevChaptersStatus[i] == curChaptersStatus[i]:
       continue
     result = result or (1.cint shl i.cint)
-  overwriteLockFile(curChapters)
 
 {.pop.}
 
