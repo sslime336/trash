@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "../../vscode_go/MiraiGo"
+    },
+    {
+      "path": "../../vscode_ts/oicq"
+    }
+  ]
+}
